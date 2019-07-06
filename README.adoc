@@ -1,6 +1,8 @@
 = Apache Kafka Workshop
 
-Apache Kafka example for : 
+This project is the code source my Apache Kafka workshop.
+
+It presents the following concepts :  
 
 * Producer
 * Consumer
