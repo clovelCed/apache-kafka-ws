@@ -29,7 +29,4 @@ public class Tweet {
 
     @JsonProperty("user")
     public User user;
-
-    /*@JsonProperty("UserMentionEntities")
-    public UserMentions[] userMentionEntityPojos;*/
 }

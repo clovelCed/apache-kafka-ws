@@ -24,6 +24,12 @@
             <artifactId>hbc-core</artifactId>
             <version>${twitter.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>com.cedricclovel.kafka</groupId>
+            <artifactId>data</artifactId>
+            <version>1.0.0</version>
+        </dependency>
     </dependencies>
 
     <build>

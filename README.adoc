@@ -1,8 +1,12 @@
 = Apache Kafka Workshop
 
+ Apache Kafka examples
+
+== Description
+
 This project is the code source for my Apache Kafka workshop.
 
-It presents the following concepts :  
+It presents the following concepts :
 
 * Producer
 * Consumer
@@ -13,4 +17,7 @@ It presents the following concepts :
 
 This project show an example with Twitter source.
 
- Apache Kafka examples
+== Actions
+
+ Create topic source
+ kafka-topics --bootstrap-server 0.0.0.0:9092 --create --topic twitter_source --partitions 3 --replication-factor 1

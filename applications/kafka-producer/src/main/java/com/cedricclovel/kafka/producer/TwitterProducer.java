@@ -1,9 +1,9 @@
 package com.cedricclovel.kafka.producer;
 
 import avro.shaded.com.google.common.collect.Lists;
-import com.cedricclovel.kafka.producer.data.Tweet;
+import com.cedricclovel.kafka.data.*;
+import com.cedricclovel.kafka.producer.data.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.kafka.common.serialization.StringSerializer;
 import com.twitter.hbc.ClientBuilder;
 import com.twitter.hbc.core.Client;
 import com.twitter.hbc.core.Constants;
@@ -13,16 +13,22 @@ import com.twitter.hbc.core.endpoint.StatusesFilterEndpoint;
 import com.twitter.hbc.core.processor.StringDelimitedProcessor;
 import com.twitter.hbc.httpclient.auth.Authentication;
 import com.twitter.hbc.httpclient.auth.OAuth1;
+import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
+import io.confluent.kafka.streams.serdes.avro.SpecificAvroSerializer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
+import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+
+import static java.util.stream.Collectors.toList;
 
 public class TwitterProducer {
 
@@ -47,17 +53,15 @@ public class TwitterProducer {
 
     private void run() {
 
+        final ObjectMapper objectMapper = new ObjectMapper();
+
         // Twitter initialisation
         final BlockingQueue<String> msgQueue = new LinkedBlockingQueue<>(1000);
-
         final Client twitterClient = this.createTwitterClient(msgQueue);
-
         twitterClient.connect();
 
         // Create Kafka Producer
-        final KafkaProducer<String, String> kafkaProducer = this.createKafkaProducer();
-
-        final ObjectMapper objectMapper = new ObjectMapper();
+        final KafkaProducer kafkaProducer = this.createKafkaProducer();
 
         while (!twitterClient.isDone()) {
 
@@ -68,15 +72,23 @@ public class TwitterProducer {
 
                 if (msg != null) {
 
-                    final Tweet tweetPojo = objectMapper.readValue(msg, Tweet.class);
+                    final Tweet tweet = objectMapper.readValue(msg, Tweet.class);
 
-                    System.out.println(tweetPojo);
+                    final TweetIdAvro tweetIdAvro = mapToTweetIdAvro(tweet.id);
+                    final TweetAvro tweetAvro = mapToTweetAvro(tweet);
 
+                    final ProducerRecord<TweetIdAvro, TweetAvro> tweetToPush = new ProducerRecord<>("twitter_source", tweetIdAvro, tweetAvro);
+
+                    kafkaProducer.send(tweetToPush, (recordMetadata, e) -> {
+                        if (e != null) {
+                            // Do something better
+                            LOGGER.error(e);
+                        }
+                    });
                 }
-
-
             } catch (InterruptedException | IOException e) {
-                e.printStackTrace();
+                LOGGER.error(e);
+            } finally {
                 twitterClient.stop();
             }
         }
@@ -84,12 +96,80 @@ public class TwitterProducer {
         LOGGER.info("End of application");
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-
-            LOGGER.info("Closing twitter client");
-            LOGGER.info("Closing kafka producer");
             twitterClient.stop();
             kafkaProducer.close();
         }));
+    }
+
+    private KafkaProducer createKafkaProducer() {
+
+        final Properties properties = new Properties();
+        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
+        properties.put(AbstractKafkaAvroSerDeConfig.SCHEMA_REGISTRY_URL_CONFIG, "http://0.0.0.0:8081");
+        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, SpecificAvroSerializer.class.getName());
+        properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, SpecificAvroSerializer.class.getName());
+
+        return new KafkaProducer<>(properties);
+    }
+
+    private TweetAvro mapToTweetAvro(Tweet tweet) {
+
+        return TweetAvro.newBuilder()
+                .setId(tweet.id)
+                .setText(tweet.text)
+                .setCreatedAt(tweet.createdAt)
+                .setSource(tweet.source)
+                .setRetweeted(tweet.retweeted)
+                .setRetweetCount(tweet.retweetCount)
+                .setUser(mapToUserAvro(tweet.user))
+                .setEntity(mapToEntityAvro(tweet.entities))
+                .build();
+    }
+
+    private EntityAvro mapToEntityAvro(Entity entity) {
+
+        final List<HashTagAvro> hashTags = Arrays.stream(entity.hashtags)
+                .map(this::mapToHashTagAvro)
+                .collect(toList());
+
+        final List<UserMentionAvro> userMentions = Arrays.stream(entity.userMentions)
+                .map(this::mapToUserMentionAvro)
+                .collect(toList());
+
+        return EntityAvro.newBuilder()
+                .setUserMentions(userMentions)
+                .setHastags(hashTags)
+                .build();
+    }
+
+    private TweetIdAvro mapToTweetIdAvro(Long id) {
+        return TweetIdAvro.newBuilder().setId(id).build();
+    }
+
+    private HashTagAvro mapToHashTagAvro(Hashtag hashtag) {
+        return HashTagAvro.newBuilder()
+                .setText(hashtag.text)
+                .build();
+    }
+
+    private UserMentionAvro mapToUserMentionAvro(UserMentions userMention) {
+        return UserMentionAvro.newBuilder()
+                .setId(userMention.id)
+                .setName(userMention.name)
+                .setScreenName(userMention.screenName)
+                .build();
+    }
+
+    private UserAvro mapToUserAvro(User user) {
+
+        return UserAvro.newBuilder()
+                .setId(user.id)
+                .setName(user.name)
+                .setScreenName(user.screenName)
+                .setFollowersCount(user.followersCount)
+                .setFriendsCount(user.friendsCount)
+                .setStatusesCount(user.statusesCount)
+                .build();
     }
 
     private Client createTwitterClient(BlockingQueue<String> msgQueue) {
@@ -110,23 +190,5 @@ public class TwitterProducer {
                 .processor(new StringDelimitedProcessor(msgQueue));
 
         return builder.build();
-    }
-
-    private KafkaProducer<String, String> createKafkaProducer() {
-        return new KafkaProducer<>(this.createKafkaProducerProperties());
-    }
-
-    private Properties createKafkaProducerProperties() {
-
-        final Properties properties = new Properties();
-
-        properties.put(ProducerConfig.ENABLE_IDEMPOTENCE_CONFIG, "true");
-        properties.put(ProducerConfig.ACKS_CONFIG, "all");
-        properties.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "0.0.0.0:9092");
-        properties.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        properties.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        properties.put(ProducerConfig.COMPRESSION_TYPE_CONFIG, "snappy");
-
-        return properties;
     }
 }

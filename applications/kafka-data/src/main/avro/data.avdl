@@ -1,0 +1,43 @@
+@namespace("com.cedricclovel.kafka.data")
+protocol InterfaceTwitter {
+
+  record TweetIdAvro{
+    long id;
+  }
+
+  record HashTagAvro{
+    string text;
+  }
+
+  record UserMentionAvro{
+    long id;
+    string screenName;
+    string name;
+  }
+
+  record UserAvro{
+    long id;
+    string name;
+    string screenName;
+    int followersCount;
+    int friendsCount;
+    int statusesCount;
+  }
+
+  record EntityAvro{
+    array<HashTagAvro> hastags = [];
+    array<UserMentionAvro> userMentions = [];
+  }
+
+  record TweetAvro{
+    long id;
+    string text;
+    string source;
+    string createdAt;
+    boolean retweeted;
+    int retweetCount;
+    UserAvro user;
+    EntityAvro entity;
+  }
+
+}
