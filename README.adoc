@@ -13,3 +13,4 @@ It presents the following concepts :
 
 This project show an example with Twitter source.
 
+ Apache Kafka examples
