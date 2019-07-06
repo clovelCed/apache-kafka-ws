@@ -56,7 +56,7 @@ public class AnonymizeStream {
     }
 
     private boolean textDoesNotContainsFrantzKafka(TweetIdAvro id, TweetAvro tweet) {
-        return !(tweet.getText().toLowerCase().contains("frantz")
+        return !(tweet.getText().toLowerCase().contains("franz")
                 && tweet.getText().toLowerCase().contains("kafka"));
     }
 
