@@ -1,8 +1,8 @@
-package com.cedricclovel.kafka.producer;
+package com.cedricclovel.kafka.streams;
 
 import avro.shaded.com.google.common.collect.Lists;
 import com.cedricclovel.kafka.data.*;
-import com.cedricclovel.kafka.producer.data.*;
+import com.cedricclovel.kafka.streams.data.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.twitter.hbc.ClientBuilder;
 import com.twitter.hbc.core.Client;
@@ -88,7 +88,6 @@ public class TwitterProducer {
                 }
             } catch (InterruptedException | IOException e) {
                 LOGGER.error(e);
-            } finally {
                 twitterClient.stop();
             }
         }

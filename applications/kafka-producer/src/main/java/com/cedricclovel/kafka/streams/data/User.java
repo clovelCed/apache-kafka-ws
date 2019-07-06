@@ -1,4 +1,4 @@
-package com.cedricclovel.kafka.producer.data;
+package com.cedricclovel.kafka.streams.data;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
