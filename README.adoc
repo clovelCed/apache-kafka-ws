@@ -1,0 +1,13 @@
+= Apache Kafka Workshop
+
+Apache Kafka example for : 
+
+* Producer
+* Consumer
+* Kafka Stream
+* Kafka Connect
+* Schema Avro
+
+
+This project show an example with Twitter source.
+
