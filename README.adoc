@@ -1,6 +1,6 @@
 = Apache Kafka Workshop
 
-This project is the code source my Apache Kafka workshop.
+This project is the code source for my Apache Kafka workshop.
 
 It presents the following concepts :  
 
