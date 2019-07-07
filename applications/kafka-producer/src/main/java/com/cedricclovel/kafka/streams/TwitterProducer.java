@@ -42,7 +42,7 @@ public class TwitterProducer {
 
     private static final String TOKEN_SECRET = System.getenv("TWITTER_TOKEN_SECRET");
 
-    private static final List<String> TERMS = Lists.newArrayList("kafka", "confluent", "bigdata", "java", "scala", "datascience");
+    private static final List<String> TERMS = Lists.newArrayList("apache kafka", "apachekafka", "kafka", "confluent", "bigdata", "hadoop", "apache spark", "apachespark", "data science", "datascience", "machine learning", "deep learning", "dataengineer", "data engineer");
 
     private TwitterProducer() {
     }
@@ -116,12 +116,14 @@ public class TwitterProducer {
         return TweetAvro.newBuilder()
                 .setId(tweet.id)
                 .setText(tweet.text)
+                .setLang(tweet.lang)
                 .setCreatedAt(tweet.createdAt)
                 .setSource(tweet.source)
                 .setRetweeted(tweet.retweeted)
                 .setRetweetCount(tweet.retweetCount)
                 .setUser(mapToUserAvro(tweet.user))
                 .setEntity(mapToEntityAvro(tweet.entities))
+                .setIsRetweet(tweet.retweetedStatus != null)
                 .build();
     }
 

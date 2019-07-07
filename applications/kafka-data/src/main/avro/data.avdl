@@ -32,12 +32,14 @@ protocol InterfaceTwitter {
   record TweetAvro{
     long id;
     string text;
+    string lang;
     string source;
     string createdAt;
     boolean retweeted;
     int retweetCount;
     UserAvro user;
     EntityAvro entity;
+    boolean isRetweet;
   }
 
 }

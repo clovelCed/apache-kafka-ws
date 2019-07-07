@@ -29,4 +29,10 @@ public class Tweet {
 
     @JsonProperty("user")
     public User user;
+
+    @JsonProperty("retweeted_status")
+    public Tweet retweetedStatus ;
+
+    @JsonProperty("lang")
+    public String lang;
 }

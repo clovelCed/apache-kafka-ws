@@ -21,5 +21,5 @@ This project show an example with Twitter source.
 
  Create topic source
  kafka-topics --bootstrap-server 0.0.0.0:9092 --create --topic twitter_source --partitions 3 --replication-factor 1
- kafka-topics --bootstrap-server 0.0.0.0:9092 --create --topic twitter_anonymized --partitions 3 --replication-factor 1
+ kafka-topics --bootstrap-server 0.0.0.0:9092 --create --topic twitter_cleaned --partitions 3 --replication-factor 1
 
